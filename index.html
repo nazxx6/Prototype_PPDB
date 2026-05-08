@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PPDB Online</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #F1F5F9; color: #1E293B; }
+  .page { display: none; min-height: 100vh; flex-direction: column; }
+  .page.active { display: flex; }
+
+  /* ===== NAV ===== */
+  .nav-user { background: #1E40AF; color: white; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+  .nav-brand { font-weight: 700; font-size: 16px; cursor: pointer; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .btn-nav-ghost { background: transparent; border: none; color: white; cursor: pointer; font-size: 14px; }
+  .btn-nav-outline { background: transparent; border: 1px solid rgba(255,255,255,0.7); color: white; border-radius: 6px; padding: 6px 16px; cursor: pointer; font-size: 14px; }
+  .btn-nav-solid { background: white; color: #1E40AF; border: none; border-radius: 6px; padding: 7px 18px; cursor: pointer; font-weight: 600; font-size: 14px; }
+
+  /* ===== FOOTER ===== */
+  .footer { background: #1E40AF; color: rgba(255,255,255,0.75); text-align: center; padding: 16px; font-size: 13px; flex-shrink: 0; }
+
+  /* ===== MAIN ===== */
+  .main { flex: 1; padding: 32px 24px; }
+  .container { max-width: 720px; margin: 0 auto; }
+  .container-sm { max-width: 480px; margin: 0 auto; }
+
+  /* ===== BUTTONS ===== */
+  .btn { display: inline-block; padding: 11px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; text-align: center; }
+  .btn-primary { background: #2563EB; color: white; }
+  .btn-primary:hover { background: #1D4ED8; }
+  .btn-success { background: #16A34A; color: white; }
+  .btn-danger { background: #DC2626; color: white; }
+  .btn-outline { background: white; color: #374151; border: 1px solid #D1D5DB; }
+  .btn-block { display: block; width: 100%; }
+  .btn-lg { padding: 13px 32px; font-size: 15px; }
+
+  /* ===== CARD ===== */
+  .card { background: white; border-radius: 12px; border: 1px solid #E2E8F0; padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 15px; font-weight: 700; color: #1E293B; margin-bottom: 16px; }
+
+  /* ===== FORM ===== */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #374151; }
+  .form-control { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 14px; font-family: inherit; background: white; }
+  .form-control:focus { outline: 2px solid #2563EB; border-color: transparent; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid .full { grid-column: 1 / -1; }
+
+  /* ===== TABLE ===== */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 12px 14px; font-size: 13px; font-weight: 600; color: #64748B; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+  td { padding: 13px 14px; font-size: 14px; border-bottom: 1px solid #F1F5F9; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ===== BADGE ===== */
+  .badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .badge-yellow { color: #D97706; background: #FEF3C7; }
+  .badge-green { color: #16A34A; background: #DCFCE7; }
+  .badge-red { color: #DC2626; background: #FEE2E2; }
+  .badge-blue { color: #2563EB; background: #EFF6FF; }
+  .badge-gray { color: #6B7280; background: #F3F4F6; }
+
+  /* ===== STAT CARD ===== */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .stat-card { background: white; border-radius: 12px; border: 1px solid #E2E8F0; padding: 20px; }
+  .stat-icon { font-size: 28px; margin-bottom: 10px; }
+  .stat-val { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-size: 13px; color: #64748B; }
+  .text-blue { color: #2563EB; }
+  .text-green { color: #16A34A; }
+  .text-orange { color: #D97706; }
+  .text-purple { color: #7C3AED; }
+
+  /* ===== PROGRESS ===== */
+  .progress { background: #E2E8F0; border-radius: 6px; height: 10px; overflow: hidden; margin: 6px 0 4px; }
+  .progress-bar { height: 100%; border-radius: 6px; }
+
+  /* ===== AUTH ===== */
+  .auth-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+  .auth-card { background: white; border-radius: 12px; padding: 40px 36px; width: 100%; max-width: 400px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .auth-icon { text-align: center; font-size: 48px; margin-bottom: 8px; }
+  .auth-title { text-align: center; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .auth-sub { text-align: center; color: #64748B; font-size: 14px; margin-bottom: 28px; }
+  .auth-footer { text-align: center; margin-top: 20px; font-size: 14px; color: #374151; }
+
+  /* ===== ADMIN LAYOUT ===== */
+  .admin-wrap { display: flex; min-height: 100vh; }
+  .sidebar { width: 210px; min-width: 210px; background: #1E3A8A; color: white; display: flex; flex-direction: column; }
+  .sidebar-brand { padding: 20px 16px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-brand-name { font-weight: 700; font-size: 15px; }
+  .sidebar-brand-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: transparent; color: white; border: none; cursor: pointer; font-size: 14px; width: 100%; text-align: left; }
+  .sidebar-item:hover { background: rgba(255,255,255,0.08); }
+  .sidebar-item.active { background: #2563EB; }
+  .sidebar-footer { padding: 16px; }
+  .admin-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .admin-header { background: white; border-bottom: 1px solid #E2E8F0; height: 56px; display: flex; align-items: center; justify-content: flex-end; padding: 0 24px; flex-shrink: 0; }
+  .admin-header span { font-size: 14px; color: #64748B; }
+  .admin-main { flex: 1; padding: 24px; overflow-y: auto; background: #F8FAFC; }
+  .page-title { font-size: 20px; font-weight: 700; margin-bottom: 24px; }
+
+  /* ===== MISC ===== */
+  .flex { display: flex; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .gap-12 { gap: 12px; }
+  .gap-16 { gap: 16px; }
+  .mb-0 { margin-bottom: 0; }
+  .mb-4 { margin-bottom: 4px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-20 { margin-bottom: 20px; }
+  .mb-24 { margin-bottom: 24px; }
+  .text-sm { font-size: 13px; color: #64748B; }
+  .text-xs { font-size: 12px; color: #94A3B8; }
+  .fw-600 { font-weight: 600; }
+  .fw-700 { font-weight: 700; }
+  .divider { border: none; border-top: 1px solid #F1F5F9; margin: 0; }
+  .link-btn { background: none; border: none; color: #2563EB; cursor: pointer; font-size: 14px; text-decoration: underline; font-family: inherit; }
+  .row-item { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid #F1F5F9; }
+  .row-item:last-child { border-bottom: none; }
+  .upload-area { border: 2px dashed #D1D5DB; border-radius: 10px; padding: 40px 20px; text-align: center; background: #FAFAFA; cursor: pointer; }
+  .upload-area:hover { border-color: #2563EB; background: #EFF6FF; }
+  .pagination { display: flex; gap: 4px; align-items: center; }
+  .page-btn { padding: 5px 10px; background: white; color: #374151; border: 1px solid #E2E8F0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .page-btn.active { background: #2563EB; color: white; border-color: #2563EB; }
+  .alert-blue { background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 16px 20px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+  .alert-green { background: #DCFCE7; border: 1px solid #86EFAC; border-radius: 10px; padding: 16px 20px; display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+  .va-box { background: #EFF6FF; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 20px; }
+  .va-label { font-size: 11px; font-weight: 700; color: #3B82F6; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .va-number { font-size: 26px; font-weight: 800; color: #1D4ED8; letter-spacing: 0.1em; }
+  .timeline-item { display: flex; gap: 16px; }
+  .timeline-dot { display: flex; flex-direction: column; align-items: center; }
+  .dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
+  .dot-done { background: #16A34A; color: white; }
+  .dot-pending { background: #E2E8F0; color: #94A3B8; }
+  .dot-line { width: 2px; height: 32px; }
+  .line-done { background: #16A34A; }
+  .line-pending { background: #E2E8F0; }
+  .timeline-content { padding-bottom: 20px; }
+  .hero { background: #2563EB; color: white; padding: 72px 24px; text-align: center; }
+  .hero h1 { font-size: 30px; font-weight: 700; margin-bottom: 16px; }
+  .hero p { font-size: 15px; color: rgba(255,255,255,0.85); max-width: 480px; margin: 0 auto 32px; line-height: 1.6; }
+  .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-hero-white { background: white; color: #1E40AF; border: none; border-radius: 8px; padding: 13px 32px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .btn-hero-outline { background: transparent; color: white; border: 2px solid white; border-radius: 8px; padding: 13px 32px; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .features { padding: 56px 24px; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; max-width: 860px; margin: 0 auto; }
+  .feature-card { background: white; border-radius: 12px; padding: 28px 20px; text-align: center; border: 1px solid #E2E8F0; }
+  .schedule { background: #1E3A8A; color: white; padding: 48px 24px; }
+  .schedule h2 { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 28px; }
+  .schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; max-width: 800px; margin: 0 auto; }
+  .schedule-card { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 20px 16px; }
+  .kuota-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+  .checkbox-card { border: 2px solid #2563EB; border-radius: 10px; padding: 18px; display: flex; gap: 12px; align-items: flex-start; background: #EFF6FF; }
+  .checkbox-icon { width: 20px; height: 20px; border-radius: 4px; background: #EFF6FF; border: 2px solid #2563EB; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #2563EB; font-size: 12px; margin-top: 2px; }
+  .info-box { background: #EFF6FF; border-radius: 8px; padding: 14px 16px; font-size: 13px; color: #1D4ED8; line-height: 1.6; margin-bottom: 20px; }
+  .jalur-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .jalur-btn { padding: 16px; border-radius: 10px; border: 2px solid #E2E8F0; background: white; cursor: pointer; font-weight: 600; font-size: 14px; color: #374151; }
+  .jalur-btn.selected { border-color: #2563EB; background: #EFF6FF; color: #2563EB; }
+  .action-btns { display: flex; gap: 12px; margin-top: 4px; }
+  .action-btns .btn { flex: 1; }
+  .search-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .search-bar input, .search-bar select { padding: 9px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 14px; font-family: inherit; background: white; }
+  .search-bar input { flex: 1; min-width: 180px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 32px; margin-bottom: 4px; }
+  .detail-row span:first-child { color: #94A3B8; }
+  .detail-row span:last-child { font-weight: 600; }
+  .user-action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .user-action-btn { border-radius: 10px; padding: 18px 12px; cursor: pointer; font-weight: 600; font-size: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 1px solid #E2E8F0; }
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .full { grid-column: 1; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .jalur-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== PAGE: HOME ===================== -->
+<div class="page active" id="page-home">
+  <nav class="nav-user">
+    <div class="nav-brand" onclick="go('home')">🏫 PPDB Online</div>
+    <div class="nav-right">
+      <button class="btn-nav-ghost" onclick="go('login')">Login</button>
+      <button class="btn-nav-solid" onclick="go('register')">Daftar</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <div style="font-size:52px;margin-bottom:16px">🏫</div>
+    <h1>Selamat Datang di PPDB Online</h1>
+    <p>Sistem Penerimaan Peserta Didik Baru — Daftar sekolah dengan mudah, cepat, dan transparan.</p>
+    <div class="hero-btns">
+      <button class="btn-hero-white" onclick="go('register')">Mulai Pendaftaran</button>
+      <button class="btn-hero-outline" onclick="go('login')">Masuk Akun</button>
+    </div>
+  </div>
+  <div class="features">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div style="font-size:40px;margin-bottom:12px">📝</div>
+        <div class="fw-700 mb-8">Daftar Online</div>
+        <div class="text-sm">Isi formulir pendaftaran secara digital dari mana saja, kapan saja.</div>
+      </div>
+      <div class="feature-card">
+        <div style="font-size:40px;margin-bottom:12px">📁</div>
+        <div class="fw-700 mb-8">Upload Dokumen</div>
+        <div class="text-sm">Unggah berkas persyaratan langsung melalui portal tanpa perlu datang ke sekolah.</div>
+      </div>
+      <div class="feature-card">
+        <div style="font-size:40px;margin-bottom:12px">📊</div>
+        <div class="fw-700 mb-8">Pantau Status</div>
+        <div class="text-sm">Lacak perkembangan pendaftaran secara real-time hingga pengumuman hasil.</div>
+      </div>
+    </div>
+  </div>
+  <div class="schedule">
+    <h2>Jadwal Pendaftaran</h2>
+    <div class="schedule-grid">
+      <div class="schedule-card"><div class="text-xs mb-4">Pembukaan Pendaftaran</div><div class="fw-700">01 Januari 2025</div></div>
+      <div class="schedule-card"><div class="text-xs mb-4">Penutupan Pendaftaran</div><div class="fw-700">31 Maret 2025</div></div>
+      <div class="schedule-card"><div class="text-xs mb-4">Pengumuman Hasil</div><div class="fw-700">15 April 2025</div></div>
+      <div class="schedule-card"><div class="text-xs mb-4">Daftar Ulang</div><div class="fw-700">16–30 April 2025</div></div>
+    </div>
+  </div>
+  <div class="footer">© 2025 PPDB Online — Sistem Penerimaan Peserta Didik Baru</div>
+</div>
+
+<!-- ===================== PAGE: LOGIN ===================== -->
+<div class="page" id="page-login">
+  <nav class="nav-user">
+    <div class="nav-brand" onclick="go('home')">🏫 PPDB Online</div>
+    <div class="nav-right">
+      <button class="btn-nav-ghost" onclick="go('login')">Login</button>
+      <button class="btn-nav-solid" onclick="go('register')">Daftar</button>
+    </div>
+  </nav>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-icon">🏫</div>
+      <div class="auth-title">Masuk Akun</div>
+      <div class="auth-sub">PPDB Online</div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" placeholder="email@contoh.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" placeholder="••••••••">
+      </div>
+      <div class="form-group flex gap-12" style="align-items:center">
+        <input type="checkbox" id="remember">
+        <label for="remember" style="font-size:14px;color:#374151">Ingat saya</label>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="go('dashboard')">➜ Masuk sebagai User</button>
+      <button class="btn btn-outline btn-block btn-lg" style="margin-top:10px" onclick="go('admin-dashboard')">🔐 Masuk sebagai Admin</button>
+      <div class="auth-footer">Belum punya akun? <button class="link-btn" onclick="go('register')">Daftar di sini</button></div>
+    </div>
+  </div>
+  <div class="footer">© 2025 PPDB Online — Sistem Penerimaan Peserta Didik Baru</div>
+</div>
+
+<!-- ===================== PAGE: REGISTER ===================== -->
+<div class="page" id="page-register">
+  <nav class="nav-user">
+    <div class="nav-brand" onclick="go('home')">🏫 PPDB Online</div>
+    <div class="nav-right">
+      <button class="btn-nav-ghost" onclick="go('login')">Login</button>
+      <button class="btn-nav-solid" onclick="go('register')">Daftar</button>
+    </div>
+  </nav>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-icon">👤</div>
+      <div class="auth-title">Buat Akun</div>
+      <div class="auth-sub">Daftarkan akun untuk memulai pendaftaran</div>
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input type="text" class="form-control" placeholder="Nama sesuai dokumen resmi">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" placeholder="email@contoh.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" placeholder="Minimal 8 karakter">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Konfirmasi Password</label>
+        <input type="password" class="form-control" placeholder="Ulangi password">
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="go('dashboard')">👤 Buat Akun</button>
+      <div class="auth-footer">Sudah punya akun? <button class="link-btn" onclick="go('login')">Masuk di sini</button></div>
+    </div>
+  </div>
+  <div class="footer">© 2025 PPDB Online — Sistem Penerimaan Peserta Didik Baru</div>
+</div>
+
+<!-- ===================== PAGE: USER DASHBOARD ===================== -->
+<div class="page" id="page-dashboard">
+  <nav class="nav-user">
+    <div class="nav-brand" onclick="go('home')">🏫 PPDB Online</div>
+    <div class="nav-right">
+      <span style="font-size:14px">Budi Santoso</span>
+      <button class="btn-nav-outline" onclick="go('login')">Logout</button>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="container">
+      <div class="mb-24">
+        <h1 style="font-size:22px;font-weight:700;margin-bottom:4px">Halo, Budi Santoso 👋</h1>
+        <p class="text-sm">Selamat datang di portal PPDB Online</p>
+      </div>
+      <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+        <div class="stat-card" style="border-top:3px solid #D97706">
+          <div style="font-size:11px;font-weight:600;color:#64748B;letter-spacing:0.05em;margin-bottom:6px">VERIFIKASI BERKAS</div>
+          <div style="font-weight:700;color:#D97706;font-size:15px">Menunggu Verifikasi</div>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #2563EB">
+          <div style="font-size:11px;font-weight:600;color:#64748B;letter-spacing:0.05em;margin-bottom:6px">STATUS PENERIMAAN</div>
+          <div style="font-weight:700;color:#2563EB;font-size:15px">Dalam Proses</div>
+        </div>
+        <div class="stat-card" style="border-top:3px solid #64748B">
+          <div style="font-size:11px;font-weight:600;color:#64748B;letter-spacing:0.05em;margin-bottom:6px">PEMBAYARAN</div>
+          <div style="font-weight:700;color:#1E293B;font-size:15px">Belum Dibayar</div>
+        </div>
+      </div>
+      <div class="user-action-grid">
+        <button class="user-action-btn" style="background:#2563EB;color:white;border:none" onclick="go('status')"><span style="font-size:20px">🔍</span>Lihat Status</button>
+        <button class="user-action-btn" style="background:white;color:#1E293B" onclick="go('upload')"><span style="font-size:20px">📁</span>Upload Dokumen</button>
+        <button class="user-action-btn" style="background:#16A34A;color:white;border:none" onclick="go('konfirmasi-bayar')"><span style="font-size:20px">💳</span>Pembayaran</button>
+        <button class="user-action-btn" style="background:white;color:#1E293B" onclick="go('bukti-bayar')"><span style="font-size:20px">🧾</span>Bukti Bayar</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📄 Dokumen Diunggah</div>
+        <div class="row-item"><span>Ijazah</span><span class="badge badge-yellow">Menunggu Review</span></div>
+        <div class="row-item"><span>Kartu Keluarga</span><span class="badge badge-green">Valid</span></div>
+        <div class="row-item"><span>SKL</span><span class="badge badge-yellow">Menunggu Review</span></div>
+        <div class="row-item"><span>Pas Foto</span><span class="badge badge-red">Ditolak</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">© 2025 PPDB Online — Sistem Penerimaan Peserta Didik Baru</div>
+</div>
+
+<!-- ===================== PAGE: FORMULIR ===================== -->
+<div class="page" id="page-formulir">
+  <nav class="nav-user">
+    <div class="nav-brand" onclick="go('home')">🏫 PPDB Online</div>
+    <div class="nav-right">
+      <span style="font-size:14px">Budi Santoso</span>
+      <button class="btn-nav-outline" onclick="go('login')">Logout</button>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="container">
+      <h1 style="font-size:22px;font-weight:700;margin-bottom:4px">Formulir Pendaftaran</h1>
+      <p class="text-sm mb-24">Lengkapi semua data dengan benar sesuai dokumen resmi</p>
+
+      <div class="card">
+        <div class="card-title">👤 Data Diri Calon Peserta</div>
+        <div class="form-grid">
+          <div class="form-group mb-0"><label class="form-label">Nama Lengkap *</label><input type="text" class="form-control" placeholder="Nama sesuai akta kelahiran"></div>
+          <div class="form-group mb-0"><label class="form-label">NISN *</label><input type="text" class="form-control" placeholder="Nomor Induk Siswa Nasional"></div>
+          <div class="form-group mb-0"><label class="form-label">Tempat Lahir *</label><input type="text" class="form-control" placeholder="Kota/Kabupaten"></div>
+          <div class="form-group mb-0"><label class="form-label">Tanggal Lahir *</label><input type="text" class="form-control" placeholder="DD/MM/YYYY"></div>
+          <div class="form-group mb-0"><label class="form-label">Jenis Kelamin *</label><select class="form-control"><option value="">Pilih jenis kelamin</option><option>Laki-laki</option><option>Perempuan</option></select></div>
+          <div class="form-group mb-0"><label class="form-label">Agama *</label><select class="form-control"><option value="">Pilih agama</option><option>Islam</option><option>Kristen</option><option>Katolik</option><option>Hindu</option><option>Buddha</option></select></div>
+          <div class="form-group mb-0 full"><label class="form-label">Alamat *</label><textarea class="form-control" rows="3" placeholder="Alamat lengkap"></textarea></div>
+          <div class="form-group mb-0"><label class="form-label">No. Telepon *</label><input type="tel" class="form-control" placeholder="08xxxxxxxxxx"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">👨‍👩‍👧 Data Orang Tua / Wali</div>
+        <div class="form-grid">
+          <div class="form-group mb-0"><label class="form-label">Nama Ayah *</label><input type="text" class="form-control" placeholder="Nama lengkap ayah"></div>
+          <div class="form-group mb-0"><label class="form-label">Pekerjaan Ayah *</label><input type="text" class="form-control" placeholder="Pekerjaan ayah"></div>
+          <div class="form-group mb-0"><label class="form-label">Nama Ibu *</label><input type="text" class="form-control" placeholder="Nama lengkap ibu"></div>
+          <div class="form-group mb-0"><label class="form-label">Pekerjaan Ibu *</label><input type="text" class="form-control" placeholder="Pekerjaan ibu"></div>
+          <div class="form-group mb-0"><label class="form-label">No. Telepon *</label><input type="tel" class="form-control" placeholder="08xxxxxxxxxx"></div>
+          <div class="form-group mb-0"><label class="form-label">Penghasilan Bulanan *</label><select class="form-control"><option value="">Pilih rentang penghasilan</option><option>Di bawah Rp 2.000.000</option><option>Rp 2.000.000 – 5.000.000</option><option>Rp 5.000.000 – 10.000.000</option><option>Di atas Rp 10.000.000</option></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎯 Jalur Penerimaan</div>
+        <div class="jalur-grid">
+          <button class="jalur-btn" onclick="pilihJalur(this)">Reguler</button>
+          <button class="jalur-btn" onclick="pilihJalur(this)">Prestasi</button>
+          <button class="jalur-btn" onclick="pilihJalur(this)">Afirmasi</button>
+        </div>
+      </div>
+
+      <div class="flex gap-12">
+        <button class="btn btn-outline" style="flex:1" onclick="go('dashboard')">Kembali</button>
+        <button class="btn btn-primary" style="flex:2" onclick="go('upload')">Simpan &amp; Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer">© 2025 PPDB Online — Sistem Penerimaan Peserta Didik Baru</div>
+</div>
+
+<!-- ===================== PAGE: UPLOAD DOKUMEN ===================== -->
+<div class="page" id="page-upload">
+  <nav class="nav-user">
+    <div class="nav-brand" onclick="go('home')">🏫 PPDB Online</div>
+    <div class="nav-right">
+      <span style="font-size:14px">Budi Santoso</span>
+      <button class="btn-nav-outline" onclick="go('login')">Logout</button>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="container-sm" style="max-width:640px;margin:0 auto">
+      <h1 style="font-size:22px;font-weight:700;margin-bottom:4px">Upload Dokumen</h1>
+      <p class="text-sm mb-24">Unggah semua dokumen persyaratan pendaftaran</p>
+      <div class="card">
+        <div class="card-title">Dokumen Terunggah</div>
+        <div class="row-item">
+          <div><div class="fw-600" style="font-size:14px">Ijazah</div><div class="text-xs">ijazah_budi.pdf</div></div>
+          <div class="flex gap-12" style="align-items:center"><span class="badge badge-yellow">Menunggu Review</span><span style="cursor:pointer">🗑️</span></div>
+        </div>
+        <div class="row-item">
+          <div><div class="fw-600" style="font-size:14px">Kartu Keluarga</div><div class="text-xs">kk_budi.pdf</div></div>
+          <div class="flex gap-12" style="align-items:center"><span class="badge badge-green">Valid</span><span style="cursor:pointer">🗑️</span></div>
+        </div>
+        <div class="row-item">
+          <div><div class="fw-600" style="font-size:14px">Pas Foto</div><div class="text-xs">foto_budi.jpg</div></div>
+          <div class="flex gap-12" style="align-items:center"><span class="badge badge-red">Ditolak</span><span style="cursor:pointer">🗑️</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📁 Unggah Dokumen Baru</div>
+        <div class="form-group">
+          <label class="form-label">Jenis Dokumen *</label>
+          <select class="form-control"><option value="">-- Pilih Jenis Dokumen --</option><option>Ijazah</option><option>Kartu Keluarga</option><option>Pas Foto</option><option>SKL</option><option>Sertifikat Prestasi</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">File Dokumen *</label>
+          <div class="upload-area">
+            <div style="font-size:32px;margin-bottom:8px">📄</div>
+            <p style="font-size:14px;color:#64748B;margin-bottom:4px">Klik untuk memilih file atau seret file ke sini</p>
+            <p class="text-xs">Format: PDF, JPG, PNG — Maksimal 5MB</p>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg">📁 Unggah Dokumen</button>
+      </div>
+      <div class="flex-between">
+        <button class="link-btn" onclick="go('dashboard')">← Kembali ke Dashboard</button>
+        <button class="link-btn" onclick="go('status')">Lihat Status Pendaftaran →</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer">© 2025 PPDB Online — Sistem Penerimaan Peserta Didik Baru</div>
+</div>
+
+<!-- ===================== PAGE: STATUS PENDAFTARAN ===================== -->
+<div class="page" id="page-status">
+  <nav class="nav-user">
+    <div class="nav-brand" onclick="go('home')">🏫 PPDB Online</div>
+    <div class="nav-right">
+      <span style="font-size:14px">Budi Santoso</span>
+      <button class="btn-nav-outline" onclick="go('login')">Logout</button>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="container-sm" style="max-width:640px;margin:0 auto">
+      <h1 style="font-size:22px;font-weight:700;margin-bottom:4px">Status Pendaftaran</h1>
+      <p class="text-sm mb-24">Informasi ini bersifat privat dan hanya dapat dilihat oleh Anda</p>
+      <div class="alert-blue">
+        <span style="font-size:26px">⏳</span>
+        <div>
+          <div class="fw-700 mb-4" style="color:#1D4ED8">Dalam Proses Seleksi</div>
+          <div style="font-size:14px;color:#3B82F6">Berkas Anda sedang dievaluasi oleh tim seleksi. Harap tunggu pengumuman resmi.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Detail Status</div>
+        <div class="row-item"><span class="text-sm">No. Pendaftaran</span><span class="fw-600" style="font-size:14px">PPDB-2025-00142</span></div>
+        <div class="row-item"><span class="text-sm">Nama</span><span class="fw-600" style="font-size:14px">Budi Santoso</span></div>
+        <div class="row-item"><span class="text-sm">Tanggal Daftar</span><span class="fw-600" style="font-size:14px">10 Januari 2025</span></div>
+        <div class="row-item"><span class="text-sm">Verifikasi Berkas</span><span class="badge badge-yellow">Menunggu Verifikasi</span></div>
+        <div class="row-item"><span class="text-sm">Status Penerimaan</span><span class="badge badge-blue">Dalam Proses</span></div>
+        <div class="row-item"><span class="text-sm">Pembayaran</span><span class="badge badge-gray">Belum Dibayar</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Tahapan Pendaftaran</div>
+        <div class="timeline-item">
+          <div class="timeline-dot"><div class="dot dot-done">✓</div><div class="dot-line line-done"></div></div>
+          <div class="timeline-content"><div class="fw-600" style="font-size:14px">Registrasi Akun</div><div class="text-xs">10 Jan 2025</div></div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"><div class="dot dot-done">✓</div><div class="dot-line line-done"></div></div>
+          <div class="timeline-content"><div class="fw-600" style="font-size:14px">Isi Formulir Pendaftaran</div><div class="text-xs">10 Jan 2025</div></div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"><div class="dot dot-done">✓</div><div class="dot-line line-pending"></div></div>
+          <div class="timeline-content"><div class="fw-600" style="font-size:14px">Upload Dokumen</div><div class="text-xs">11 Jan 2025</div></div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"><div class="dot dot-pending">○</div><div class="dot-line line-pending"></div></div>
+          <div class="timeline-content"><div class="fw-600" style="font-size:14px;color:#94A3B8">Verifikasi Berkas</div><div class="text-xs">Menunggu</div></div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot"><div class="dot dot-pending">○</div></div>
+          <div class="timeline-content"><div class="fw-600" style="font-size:14px;color:#94A3B8">Pengumuman Hasil</div><div class="text-xs">15 Apr 2025</div></div>
+        </div>
+      </div>
+      <button class="link-btn" onclick="go('dashboard')">← Kembali ke Dashboard</button>
+    </div>
+  </div>
+  <div class="footer">© 2025 PPDB Online — Sistem Penerimaan Peserta Didik Baru</div>
+</div>
+
+<!-- ===================== PAGE: KONFIRMASI BAYAR ===================== -->
+<div class="page" id="page-konfirmasi-bayar">
+  <nav class="nav-user">
+    <div class="nav-brand" onclick="go('home')">🏫 PPDB Online</div>
+    <div class="nav-right">
+      <span style="font-size:14px">Budi Santoso</span>
+      <button class="btn-nav-outline" onclick="go('login')">Logout</button>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="container-sm" style="margin:0 auto">
+      <h1 style="font-size:22px;font-weight:700;margin-bottom:4px">Konfirmasi Pembayaran</h1>
+      <p class="text-sm mb-24">Pilih metode pembayaran untuk konfirmasi penerimaan</p>
+      <div class="alert-green">
+        <span style="font-size:22px">✅</span>
+        <div>
+          <div class="fw-700 mb-4" style="color:#15803D">Selamat, Anda Diterima!</div>
+          <div style="font-size:14px;color:#16A34A">Lengkapi pembayaran berikut untuk mengkonfirmasi penerimaan Anda.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="checkbox-card mb-16">
+          <div class="checkbox-icon">✓</div>
+          <div>
+            <div class="fw-700" style="font-size:14px;margin-bottom:4px">Lunas (Bayar Penuh)</div>
+            <div class="text-sm">Pembayaran penuh dilakukan sekarang via virtual akun bank</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jumlah Pembayaran (Rp) <span style="color:#DC2626">*</span></label>
+          <input type="number" class="form-control" placeholder="Contoh: 5000000">
+          <p class="text-xs" style="margin-top:6px">Masukkan jumlah sesuai yang tertera di surat penerimaan</p>
+        </div>
+        <div class="info-box">ℹ Setelah mengklik tombol di bawah, Anda akan mendapatkan nomor <strong>virtual akun</strong> untuk melakukan transfer. Unggah bukti transfer setelah pembayaran.</div>
+        <button class="btn btn-primary btn-block btn-lg" onclick="go('bukti-bayar')">💳 Buat Virtual Akun</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer">© 2025 PPDB Online — Sistem Penerimaan Peserta Didik Baru</div>
+</div>
+
+<!-- ===================== PAGE: BUKTI BAYAR ===================== -->
+<div class="page" id="page-bukti-bayar">
+  <nav class="nav-user">
+    <div class="nav-brand" onclick="go('home')">🏫 PPDB Online</div>
+    <div class="nav-right">
+      <span style="font-size:14px">Budi Santoso</span>
+      <button class="btn-nav-outline" onclick="go('login')">Logout</button>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="container-sm" style="margin:0 auto">
+      <h1 style="font-size:22px;font-weight:700;margin-bottom:28px">Bukti Pembayaran</h1>
+      <div class="card">
+        <div class="card-title">Informasi Virtual Akun</div>
+        <div class="va-box">
+          <div class="va-label">NOMOR VIRTUAL AKUN</div>
+          <div class="va-number">8877&nbsp; 0014&nbsp; 2025&nbsp; 0001</div>
+        </div>
+        <div class="row-item"><span class="text-sm">Metode</span><span class="fw-600" style="font-size:14px">Lunas (Bayar Penuh)</span></div>
+        <div class="row-item"><span class="text-sm">Jumlah</span><span class="fw-600" style="font-size:14px">Rp 5.000.000</span></div>
+        <div class="row-item"><span class="text-sm">Status</span><span class="badge badge-yellow">Menunggu Konfirmasi</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📁 Upload Bukti Transfer</div>
+        <div class="upload-area mb-16">
+          <div style="font-size:32px;margin-bottom:8px">📄</div>
+          <p style="font-size:14px;color:#64748B;margin-bottom:4px">Klik untuk memilih bukti pembayaran</p>
+          <p class="text-xs">Format: JPG, PNG, PDF — Maks. 5MB</p>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg">📁 Upload Bukti Transfer</button>
+      </div>
+      <div class="card">
+        <div class="fw-700 mb-16" style="font-size:14px">Cara Pembayaran:</div>
+        <ol style="padding-left:20px;font-size:13px;color:#64748B;line-height:2">
+          <li>Transfer sejumlah <strong>Rp 5.000.000</strong> ke nomor virtual akun di atas</li>
+          <li>Simpan bukti transfer (screenshot/struk)</li>
+          <li>Upload bukti transfer melalui form di atas</li>
+          <li>Tunggu konfirmasi dari admin (1x24 jam)</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="footer">© 2025 PPDB Online — Sistem Penerimaan Peserta Didik Baru</div>
+</div>
+
+<!-- ===================== PAGE: ADMIN DASHBOARD ===================== -->
+<div class="page" id="page-admin-dashboard">
+  <div class="admin-wrap">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-name">🏫 PPDB Admin</div>
+        <div class="sidebar-brand-sub">Administrator</div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item active" onclick="go('admin-dashboard')">📊 Dashboard</button>
+        <button class="sidebar-item" onclick="go('admin-data')">👥 Data Pendaftar</button>
+        <button class="sidebar-item" onclick="go('admin-pembayaran')">💳 Pembayaran</button>
+        <button class="sidebar-item" onclick="go('admin-kuota')">📋 Kuota</button>
+      </nav>
+      <div class="sidebar-footer"><button class="sidebar-item" style="color:rgba(255,255,255,0.7)" onclick="go('login')">🚪 Logout</button></div>
+    </aside>
+    <div class="admin-body">
+      <div class="admin-header"><span>Rabu, 07 Mei 2025</span></div>
+      <div class="admin-main">
+        <div class="page-title">Dashboard</div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val text-blue">248</div><div class="stat-label">Total Pendaftar</div></div>
+          <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val text-orange">34</div><div class="stat-label">Menunggu Verifikasi</div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val text-green">180</div><div class="stat-label">Diterima</div></div>
+          <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-val" style="color:#F59E0B">22</div><div class="stat-label">Pembayaran Pending</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Status Kuota Penerimaan</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px">
+            <div>
+              <div class="flex-between mb-8"><span class="fw-600" style="font-size:14px">Reguler</span><span class="fw-700" style="font-size:13px">120/150</span></div>
+              <div class="progress"><div class="progress-bar" style="background:#2563EB;width:80%"></div></div>
+              <div class="text-xs">Terisi</div>
+            </div>
+            <div>
+              <div class="flex-between mb-8"><span class="fw-600" style="font-size:14px">Prestasi</span><span class="fw-700" style="font-size:13px">35/50</span></div>
+              <div class="progress"><div class="progress-bar" style="background:#2563EB;width:70%"></div></div>
+              <div class="text-xs">Terisi</div>
+            </div>
+            <div>
+              <div class="flex-between mb-8"><span class="fw-600" style="font-size:14px">Afirmasi</span><span class="fw-700" style="font-size:13px">25/30</span></div>
+              <div class="progress"><div class="progress-bar" style="background:#2563EB;width:83%"></div></div>
+              <div class="text-xs">Terisi</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Pendaftar Terbaru</div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Nama</th><th>Tanggal Daftar</th><th>Jalur</th><th>Status Verifikasi</th><th>Status Penerimaan</th></tr></thead>
+              <tbody>
+                <tr><td class="fw-600">Andi Pratama</td><td class="text-sm">07 Mei 2025</td><td class="text-sm">Reguler</td><td><span class="badge badge-yellow">Menunggu</span></td><td><span class="badge badge-blue">Proses</span></td></tr>
+                <tr><td class="fw-600">Siti Rahayu</td><td class="text-sm">06 Mei 2025</td><td class="text-sm">Prestasi</td><td><span class="badge badge-green">Diverifikasi</span></td><td><span class="badge badge-green">Diterima</span></td></tr>
+                <tr><td class="fw-600">Rizky Fauzan</td><td class="text-sm">06 Mei 2025</td><td class="text-sm">Reguler</td><td><span class="badge badge-red">Ditolak</span></td><td><span class="badge badge-red">Tidak Diterima</span></td></tr>
+                <tr><td class="fw-600">Maya Putri</td><td class="text-sm">05 Mei 2025</td><td class="text-sm">Afirmasi</td><td><span class="badge badge-green">Diverifikasi</span></td><td><span class="badge badge-green">Diterima</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: ADMIN DATA PENDAFTAR ===================== -->
+<div class="page" id="page-admin-data">
+  <div class="admin-wrap">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="sidebar-brand-name">🏫 PPDB Admin</div><div class="sidebar-brand-sub">Administrator</div></div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item" onclick="go('admin-dashboard')">📊 Dashboard</button>
+        <button class="sidebar-item active" onclick="go('admin-data')">👥 Data Pendaftar</button>
+        <button class="sidebar-item" onclick="go('admin-pembayaran')">💳 Pembayaran</button>
+        <button class="sidebar-item" onclick="go('admin-kuota')">📋 Kuota</button>
+      </nav>
+      <div class="sidebar-footer"><button class="sidebar-item" style="color:rgba(255,255,255,0.7)" onclick="go('login')">🚪 Logout</button></div>
+    </aside>
+    <div class="admin-body">
+      <div class="admin-header"><span>Rabu, 07 Mei 2025</span></div>
+      <div class="admin-main">
+        <div class="page-title">Data Pendaftar</div>
+        <div class="card mb-20">
+          <div class="search-bar">
+            <input type="text" placeholder="Cari nama / NISN...">
+            <select><option>Semua Status Verifikasi</option><option>Menunggu</option><option>Diverifikasi</option><option>Ditolak</option></select>
+            <select><option>Semua Status Penerimaan</option><option>Proses</option><option>Diterima</option><option>Tidak Diterima</option></select>
+            <button class="btn btn-primary">Filter</button>
+          </div>
+        </div>
+        <div class="card mb-0" style="padding:0;overflow:hidden">
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>No.</th><th>Nama</th><th>NISN</th><th>Tgl Daftar</th><th>Status Verifikasi</th><th>Status Penerimaan</th><th>Aksi</th></tr></thead>
+              <tbody>
+                <tr><td class="text-sm">1</td><td class="fw-600">Andi Pratama</td><td class="text-sm">0051234567</td><td class="text-sm">07 Mei 2025</td><td><span class="badge badge-yellow">Menunggu</span></td><td><span class="badge badge-blue">Proses</span></td><td><button class="link-btn" onclick="go('admin-detail')">Detail</button></td></tr>
+                <tr><td class="text-sm">2</td><td class="fw-600">Siti Rahayu</td><td class="text-sm">0059876543</td><td class="text-sm">06 Mei 2025</td><td><span class="badge badge-green">Diverifikasi</span></td><td><span class="badge badge-green">Diterima</span></td><td><button class="link-btn" onclick="go('admin-detail')">Detail</button></td></tr>
+                <tr><td class="text-sm">3</td><td class="fw-600">Rizky Fauzan</td><td class="text-sm">0053344556</td><td class="text-sm">06 Mei 2025</td><td><span class="badge badge-red">Ditolak</span></td><td><span class="badge badge-red">Tidak Diterima</span></td><td><button class="link-btn" onclick="go('admin-detail')">Detail</button></td></tr>
+                <tr><td class="text-sm">4</td><td class="fw-600">Maya Putri</td><td class="text-sm">0057788990</td><td class="text-sm">05 Mei 2025</td><td><span class="badge badge-green">Diverifikasi</span></td><td><span class="badge badge-green">Diterima</span></td><td><button class="link-btn" onclick="go('admin-detail')">Detail</button></td></tr>
+                <tr><td class="text-sm">5</td><td class="fw-600">Doni Kurnia</td><td class="text-sm">0051122334</td><td class="text-sm">05 Mei 2025</td><td><span class="badge badge-yellow">Menunggu</span></td><td><span class="badge badge-blue">Proses</span></td><td><button class="link-btn" onclick="go('admin-detail')">Detail</button></td></tr>
+                <tr><td class="text-sm">6</td><td class="fw-600">Lina Wijaya</td><td class="text-sm">0056677889</td><td class="text-sm">04 Mei 2025</td><td><span class="badge badge-green">Diverifikasi</span></td><td><span class="badge badge-green">Diterima</span></td><td><button class="link-btn" onclick="go('admin-detail')">Detail</button></td></tr>
+                <tr><td class="text-sm">7</td><td class="fw-600">Fajar Nugroho</td><td class="text-sm">0052233445</td><td class="text-sm">04 Mei 2025</td><td><span class="badge badge-yellow">Menunggu</span></td><td><span class="badge badge-blue">Proses</span></td><td><button class="link-btn" onclick="go('admin-detail')">Detail</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:14px 20px;border-top:1px solid #F1F5F9;display:flex;justify-content:space-between;align-items:center">
+            <span class="text-sm">Menampilkan 1–7 dari 248 pendaftar</span>
+            <div class="pagination">
+              <button class="page-btn">←</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <button class="page-btn">...</button>
+              <button class="page-btn">25</button>
+              <button class="page-btn">→</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: ADMIN DETAIL ===================== -->
+<div class="page" id="page-admin-detail">
+  <div class="admin-wrap">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="sidebar-brand-name">🏫 PPDB Admin</div><div class="sidebar-brand-sub">Administrator</div></div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item" onclick="go('admin-dashboard')">📊 Dashboard</button>
+        <button class="sidebar-item active" onclick="go('admin-data')">👥 Data Pendaftar</button>
+        <button class="sidebar-item" onclick="go('admin-pembayaran')">💳 Pembayaran</button>
+        <button class="sidebar-item" onclick="go('admin-kuota')">📋 Kuota</button>
+      </nav>
+      <div class="sidebar-footer"><button class="sidebar-item" style="color:rgba(255,255,255,0.7)" onclick="go('login')">🚪 Logout</button></div>
+    </aside>
+    <div class="admin-body">
+      <div class="admin-header"><span>Rabu, 07 Mei 2025</span></div>
+      <div class="admin-main">
+        <button class="link-btn mb-20" style="display:block" onclick="go('admin-data')">← Kembali ke Daftar Pendaftar</button>
+        <div class="page-title">Detail Pendaftar</div>
+        <div class="card">
+          <div class="card-title">Data Diri Calon Peserta</div>
+          <div class="detail-grid">
+            <div class="detail-row" style="font-size:14px"><span>Nama Lengkap: </span><span>Andi Pratama</span></div>
+            <div class="detail-row" style="font-size:14px"><span>NISN: </span><span>0051234567</span></div>
+            <div class="detail-row" style="font-size:14px"><span>Tempat Lahir: </span><span>Jakarta</span></div>
+            <div class="detail-row" style="font-size:14px"><span>Tanggal Lahir: </span><span>15 Maret 2010</span></div>
+            <div class="detail-row" style="font-size:14px"><span>Jenis Kelamin: </span><span>Laki-laki</span></div>
+            <div class="detail-row" style="font-size:14px"><span>Agama: </span><span>Islam</span></div>
+            <div class="detail-row" style="font-size:14px"><span>Alamat: </span><span>Jl. Merdeka No. 10, Jakarta Pusat</span></div>
+            <div class="detail-row" style="font-size:14px"><span>No. Telepon: </span><span>081234567890</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Data Orang Tua</div>
+          <div class="detail-grid">
+            <div class="detail-row" style="font-size:14px"><span>Nama Ayah: </span><span>Budi Pratama</span></div>
+            <div class="detail-row" style="font-size:14px"><span>Pekerjaan Ayah: </span><span>Pegawai Swasta</span></div>
+            <div class="detail-row" style="font-size:14px"><span>Nama Ibu: </span><span>Sri Wulandari</span></div>
+            <div class="detail-row" style="font-size:14px"><span>Pekerjaan Ibu: </span><span>Ibu Rumah Tangga</span></div>
+            <div class="detail-row" style="font-size:14px"><span>No. Telepon: </span><span>082199887766</span></div>
+            <div class="detail-row" style="font-size:14px"><span>Penghasilan Bulanan: </span><span>Rp 2.000.000 – 5.000.000</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Dokumen Diunggah</div>
+          <div class="row-item"><div><div class="fw-600" style="font-size:14px">Ijazah</div><div class="text-xs">ijazah_andi.pdf</div></div><span class="badge badge-yellow">Menunggu Review</span></div>
+          <div class="row-item"><div><div class="fw-600" style="font-size:14px">Kartu Keluarga</div><div class="text-xs">kk_andi.pdf</div></div><span class="badge badge-green">Valid</span></div>
+          <div class="row-item"><div><div class="fw-600" style="font-size:14px">Pas Foto</div><div class="text-xs">foto_andi.jpg</div></div><span class="badge badge-green">Valid</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Aksi Verifikasi</div>
+          <div class="action-btns">
+            <button class="btn btn-success">✅ Terima Pendaftar</button>
+            <button class="btn btn-danger">❌ Tolak Pendaftar</button>
+            <button class="btn btn-outline">📧 Kirim Pesan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: ADMIN PEMBAYARAN ===================== -->
+<div class="page" id="page-admin-pembayaran">
+  <div class="admin-wrap">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="sidebar-brand-name">🏫 PPDB Admin</div><div class="sidebar-brand-sub">Administrator</div></div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item" onclick="go('admin-dashboard')">📊 Dashboard</button>
+        <button class="sidebar-item" onclick="go('admin-data')">👥 Data Pendaftar</button>
+        <button class="sidebar-item active" onclick="go('admin-pembayaran')">💳 Pembayaran</button>
+        <button class="sidebar-item" onclick="go('admin-kuota')">📋 Kuota</button>
+      </nav>
+      <div class="sidebar-footer"><button class="sidebar-item" style="color:rgba(255,255,255,0.7)" onclick="go('login')">🚪 Logout</button></div>
+    </aside>
+    <div class="admin-body">
+      <div class="admin-header"><span>Rabu, 07 Mei 2025</span></div>
+      <div class="admin-main">
+        <div class="page-title">Pembayaran</div>
+        <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+          <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val text-green" style="font-size:20px">Rp 900.000.000</div><div class="stat-label">Total Pembayaran</div></div>
+          <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val text-orange">22</div><div class="stat-label">Menunggu Konfirmasi</div></div>
+          <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val text-blue">158</div><div class="stat-label">Terkonfirmasi</div></div>
+        </div>
+        <div class="card mb-0" style="padding:0;overflow:hidden">
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>No.</th><th>Nama Pendaftar</th><th>Virtual Akun</th><th>Jumlah</th><th>Metode</th><th>Status</th><th>Aksi</th></tr></thead>
+              <tbody>
+                <tr><td class="text-sm">1</td><td class="fw-600">Siti Rahayu</td><td style="font-family:monospace;font-size:13px;color:#94A3B8">8877-0059876-001</td><td class="fw-600">Rp 5.000.000</td><td class="text-sm">Lunas</td><td><span class="badge badge-yellow">Menunggu</span></td><td><button class="btn btn-success" style="padding:6px 14px;font-size:13px">Konfirmasi</button></td></tr>
+                <tr><td class="text-sm">2</td><td class="fw-600">Maya Putri</td><td style="font-family:monospace;font-size:13px;color:#94A3B8">8877-0057788-001</td><td class="fw-600">Rp 5.000.000</td><td class="text-sm">Lunas</td><td><span class="badge badge-green">Terkonfirmasi</span></td><td></td></tr>
+                <tr><td class="text-sm">3</td><td class="fw-600">Lina Wijaya</td><td style="font-family:monospace;font-size:13px;color:#94A3B8">8877-0056677-001</td><td class="fw-600">Rp 5.000.000</td><td class="text-sm">Lunas</td><td><span class="badge badge-green">Terkonfirmasi</span></td><td></td></tr>
+                <tr><td class="text-sm">4</td><td class="fw-600">Dian Kusuma</td><td style="font-family:monospace;font-size:13px;color:#94A3B8">8877-0054433-001</td><td class="fw-600">Rp 5.000.000</td><td class="text-sm">Lunas</td><td><span class="badge badge-yellow">Menunggu</span></td><td><button class="btn btn-success" style="padding:6px 14px;font-size:13px">Konfirmasi</button></td></tr>
+                <tr><td class="text-sm">5</td><td class="fw-600">Bima Saputra</td><td style="font-family:monospace;font-size:13px;color:#94A3B8">8877-0051122-001</td><td class="fw-600">Rp 5.000.000</td><td class="text-sm">Lunas</td><td><span class="badge badge-green">Terkonfirmasi</span></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PAGE: ADMIN KUOTA ===================== -->
+<div class="page" id="page-admin-kuota">
+  <div class="admin-wrap">
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="sidebar-brand-name">🏫 PPDB Admin</div><div class="sidebar-brand-sub">Administrator</div></div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item" onclick="go('admin-dashboard')">📊 Dashboard</button>
+        <button class="sidebar-item" onclick="go('admin-data')">👥 Data Pendaftar</button>
+        <button class="sidebar-item" onclick="go('admin-pembayaran')">💳 Pembayaran</button>
+        <button class="sidebar-item active" onclick="go('admin-kuota')">📋 Kuota</button>
+      </nav>
+      <div class="sidebar-footer"><button class="sidebar-item" style="color:rgba(255,255,255,0.7)" onclick="go('login')">🚪 Logout</button></div>
+    </aside>
+    <div class="admin-body">
+      <div class="admin-header"><span>Rabu, 07 Mei 2025</span></div>
+      <div class="admin-main">
+        <div class="page-title">Manajemen Kuota</div>
+        <div class="stat-grid">
+          <div class="stat-card" style="text-align:center"><div class="stat-val text-blue">230</div><div class="stat-label">Total Kuota</div></div>
+          <div class="stat-card" style="text-align:center"><div class="stat-val text-green">180</div><div class="stat-label">Terisi</div></div>
+          <div class="stat-card" style="text-align:center"><div class="stat-val text-orange">50</div><div class="stat-label">Tersisa</div></div>
+          <div class="stat-card" style="text-align:center"><div class="stat-val text-purple">78%</div><div class="stat-label">% Terisi</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Kuota per Jalur Penerimaan</div>
+          <div class="mb-24">
+            <div class="flex-between mb-8"><span class="fw-600" style="font-size:14px">Jalur Reguler</span><span class="text-sm">120 / 150 kursi terisi</span></div>
+            <div class="progress"><div class="progress-bar" style="background:#2563EB;width:80%"></div></div>
+            <div style="text-align:right;font-size:12px;color:#94A3B8">80%</div>
+          </div>
+          <div class="mb-24">
+            <div class="flex-between mb-8"><span class="fw-600" style="font-size:14px">Jalur Prestasi</span><span class="text-sm">35 / 50 kursi terisi</span></div>
+            <div class="progress"><div class="progress-bar" style="background:#16A34A;width:70%"></div></div>
+            <div style="text-align:right;font-size:12px;color:#94A3B8">70%</div>
+          </div>
+          <div>
+            <div class="flex-between mb-8"><span class="fw-600" style="font-size:14px">Jalur Afirmasi</span><span class="text-sm">25 / 30 kursi terisi</span></div>
+            <div class="progress"><div class="progress-bar" style="background:#F59E0B;width:83%"></div></div>
+            <div style="text-align:right;font-size:12px;color:#94A3B8">83%</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Ubah Kuota Penerimaan</div>
+          <div class="kuota-action-grid mb-20">
+            <div class="form-group mb-0"><label class="form-label">Kuota Jalur Reguler</label><input type="number" class="form-control" value="150"></div>
+            <div class="form-group mb-0"><label class="form-label">Kuota Jalur Prestasi</label><input type="number" class="form-control" value="50"></div>
+            <div class="form-group mb-0"><label class="form-label">Kuota Jalur Afirmasi</label><input type="number" class="form-control" value="30"></div>
+          </div>
+          <button class="btn btn-primary">💾 Simpan Perubahan Kuota</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function go(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById('page-' + page);
+    if (target) target.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function pilihJalur(el) {
+    document.querySelectorAll('.jalur-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+</script>
+</body>
+</html>
